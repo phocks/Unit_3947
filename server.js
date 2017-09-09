@@ -1,37 +1,63 @@
-/* Setting things up. */
-var path = require('path'),
-    express = require('express'),
-    app = express(),   
-    Twit = require('twit'),
-    config = {
-    /* Be sure to update the .env file with your API keys. See how to get them: https://botwiki.org/tutorials/how-to-create-a-twitter-app */      
-      twitter: {
-        consumer_key: process.env.CONSUMER_KEY,
-        consumer_secret: process.env.CONSUMER_SECRET,
-        access_token: process.env.ACCESS_TOKEN,
-        access_token_secret: process.env.ACCESS_TOKEN_SECRET
-      }
-    },
-    T = new Twit(config.twitter),
-    stream = T.stream('statuses/sample');
+const path = require('path'),
+      express = require('express'),
+      app = express(),   
+      Twit = require('twit'),
+      config = {     
+        twitter: {
+          consumer_key: process.env.CONSUMER_KEY,
+          consumer_secret: process.env.CONSUMER_SECRET,
+          access_token: process.env.ACCESS_TOKEN,
+          access_token_secret: process.env.ACCESS_TOKEN_SECRET
+        }
+      },
+      Bot = new Twit(config.twitter),
+      stream = Bot.stream('statuses/sample'),
+      TWITTER_SEARCH_PHRASE = 'cowspiracy';
 
 app.use(express.static('public'));
 
-/* You can use uptimerobot.com or a similar site to hit your /BOT_ENDPOINT to wake up your app and make your Twitter bot tweet. */
-
 app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
-/* The example below tweets out "Hello world!". */
-  var resp = response;
-  T.post('statuses/update', { status: 'hello world 👋' }, function(err, data, response) {
-    if (err){
-      resp.sendStatus(500);
-      console.log('Error!');
-      console.log(err);
+  
+  var query = {
+    q: TWITTER_SEARCH_PHRASE,
+    result_type: "recent"
+  }
+
+  Bot.get('search/tweets', query, BotGotLatestTweet);
+
+  function BotGotLatestTweet (error, data, response) {
+    if (error) {
+      console.log('Bot could not find latest tweet, : ' + error);
     }
-    else{
-      resp.sendStatus(200);
+    else {
+      var id = {
+        id : data.statuses[0].id_str
+      }
+
+      Bot.post('statuses/retweet/:id', id, BotRetweeted);
+      
+      function BotRetweeted(error, response) {
+        if (error) {
+          console.log('Bot could not retweet, : ' + error);
+        }
+        else {
+          console.log('Bot retweeted : ' + id.id);
+        }
+      }
+
+      Bot.post('favorites/create', id, BotFaved);
+
+      function BotFaved(error, response) {
+        if (error) {
+          console.log('Bot could not fav, : ' + error);
+        }
+        else {
+          console.log('Bot faved : ' + id.id);
+        }
+      }
     }
-  });
+    response.sendStatus(200);
+  }
 });
 
 var listener = app.listen(process.env.PORT, function () {
