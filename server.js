@@ -12,7 +12,10 @@ const path = require('path'),
       },
       Bot = new Twit(config.twitter),
       stream = Bot.stream('statuses/sample'),
-      TWITTER_SEARCH_PHRASE = 'cowspiracy';
+      TWITTER_SEARCH_PHRASE = 'cowspiracy',
+      blockedUsernames = [
+        'SSF_BERF_DEFM'
+      ];
 
 app.use(express.static('public'));
 
@@ -23,9 +26,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
     result_type: "recent"
   }
 
-  Bot.get('search/tweets', query, BotGotLatestTweet);
-
-  function BotGotLatestTweet (error, data, response) {
+  Bot.get('search/tweets', query, function (error, data, response) {
     if (error) {
       console.log('Bot could not find latest tweet, : ' + error);
     }
@@ -33,32 +34,40 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
       var id = {
         id : data.statuses[0].id_str
       }
-
-      Bot.post('statuses/retweet/:id', id, BotRetweeted);
       
-      function BotRetweeted(error, response) {
-        if (error) {
-          console.log('Bot could not retweet, : ' + error);
-        }
-        else {
-          console.log('Bot retweeted : ' + id.id);
-        }
-      }
+      var currentUser = data.statuses[0].user.screen_name;
+      
+      console.log(currentUser);
+      console.log(data.statuses[0].text)
+      
+      // Check if user is blocked otherwise continue
+      if (blockedUsernames.indexOf(currentUser) > -1) {
+        // In the array
+        console.log('Blocked user ' + currentUser + " found. Not continuing...");
+      } else {
+        // Not in the array
+        Bot.post('statuses/retweet/:id', id, function (error, response) {
+          if (error) {
+            console.log('Bot could not retweet, : ' + error);
+          }
+          else {
+            console.log('Bot retweeted : ' + id.id);
+          }
+        });
 
-      Bot.post('favorites/create', id, BotFaved);
-
-      function BotFaved(error, response) {
-        if (error) {
-          console.log('Bot could not fav, : ' + error);
-        }
-        else {
-          console.log('Bot faved : ' + id.id);
-        }
+        Bot.post('favorites/create', id, function (error, response) {
+          if (error) {
+            console.log('Bot could not fav, : ' + error);
+          }
+          else {
+            console.log('Bot faved : ' + id.id);
+          }
+        });
       }
-    }
-  }
+    } // else not error
+  });
   response.sendStatus(200);
-});
+}); // app.all Express call
 
 var listener = app.listen(process.env.PORT, function () {
   console.log('Your bot is running on port ' + listener.address().port);
