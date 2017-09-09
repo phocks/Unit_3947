@@ -56,8 +56,8 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
         }
       }
     }
-    response.sendStatus(200);
   }
+  response.sendStatus(200);
 });
 
 var listener = app.listen(process.env.PORT, function () {
