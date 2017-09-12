@@ -28,7 +28,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
 
   Bot.get('search/tweets', query, function (error, data, response) {
     if (error) {
-      console.log('Bot could not find latest tweet, : ' + error);
+      console.log('Bot could not find latest tweet, - ' + error);
     }
     else {
       var id = {
@@ -37,8 +37,11 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
       
       var currentUser = data.statuses[0].user.screen_name;
       
+      console.log(data.statuses[0]);
+      
       console.log(currentUser);
-      console.log(data.statuses[0].text)
+      console.log(data.statuses[0].text);
+      
       
       // Check if user is blocked otherwise continue
       if (blockedUsernames.indexOf(currentUser) > -1) {
@@ -48,7 +51,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
         // Not in the array
         Bot.post('statuses/retweet/:id', id, function (error, response) {
           if (error) {
-            console.log('Bot could not retweet, : ' + error);
+            console.log('Bot could not retweet, - ' + error);
           }
           else {
             console.log('Bot retweeted : ' + id.id);
@@ -57,7 +60,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
 
         Bot.post('favorites/create', id, function (error, response) {
           if (error) {
-            console.log('Bot could not fav, : ' + error);
+            console.log('Bot could not fav, - ' + error);
           }
           else {
             console.log('Bot faved : ' + id.id);
