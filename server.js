@@ -11,10 +11,10 @@ const path = require('path'),
         }
       },
       Bot = new Twit(config.twitter),
-      stream = Bot.stream('statuses/sample'),
+      // stream = Bot.stream('statuses/sample'),
       TWITTER_SEARCH_PHRASE = 'cowspiracy',
       blockedUsernames = [
-        'SSF_BERF_DEFM'
+        'SSF_BERF_DEFM', 'DefendingBeef'
       ];
 
 app.use(express.static('public'));
@@ -23,7 +23,8 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
   
   var query = {
     q: TWITTER_SEARCH_PHRASE,
-    result_type: "recent"
+    result_type: "recent",
+    lang: "en"
   }
 
   Bot.get('search/tweets', query, function (error, data, response) {
