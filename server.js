@@ -1,21 +1,57 @@
-const path = require('path'),
-      express = require('express'),
-      app = express(),   
-      Twit = require('twit'),
-      config = {     
+var path = require('path'),
+    express = require('express'),
+    app = express(),   
+    Twit = require('twit');
+var nodemailer = require('nodemailer');
+var mg = require('nodemailer-mailgun-transport');
+
+
+var config = {     
         twitter: {
           consumer_key: process.env.CONSUMER_KEY,
           consumer_secret: process.env.CONSUMER_SECRET,
           access_token: process.env.ACCESS_TOKEN,
           access_token_secret: process.env.ACCESS_TOKEN_SECRET
         }
-      },
-      Bot = new Twit(config.twitter),
+      }
+      
+var Bot = new Twit(config.twitter),
       // stream = Bot.stream('statuses/sample'),
       TWITTER_SEARCH_PHRASE = 'cowspiracy',
       blockedUsernames = [
-        'SSF_BERF_DEFM', 'DefendingBeef'
+        'SSF_BERF_DEFM', 'DefendingBeef', 'Unit_3947'
       ];
+
+// This is your API key that you retrieve from www.mailgun.com/cp (free up to 10K monthly emails)
+var auth = {
+  auth: {
+    api_key: process.env.MAILGUN_KEY,
+    domain: process.env.MAILGUN_DOMAIN
+  }
+}
+
+var nodemailerMailgun = nodemailer.createTransport(mg(auth));
+
+// nodemailerMailgun.sendMail({
+//         from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
+//         to: 'phocks@gmail.com', // An array if you have multiple recipients.
+//         // cc:'second@domain.com',
+//         // bcc:'secretagent@company.gov',
+//         subject: 'Cowspiracy bot log',
+//         // 'h:Reply-To': 'reply2this@company.com',
+//         //You can use "html:" to send HTML email content. It's magic!
+//         // html: JSON.stringify(data),
+//         //You can use "text:" to send plain-text content. It's oldschool!
+//         text: "Hello there !!!!!"
+//       }, function (err, info) {
+//         if (err) {
+//           console.log('Error: ' + err);
+//         }
+//         else {
+//           console.log('Response: ' + JSON.stringify(info));
+//         }
+//       });
+
 
 app.use(express.static('public'));
 
@@ -38,7 +74,28 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
       
       var currentUser = data.statuses[0].user.screen_name;
       
-      console.log(data.statuses[0]);
+      nodemailerMailgun.sendMail({
+        from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
+        to: 'phocks@gmail.com', // An array if you have multiple recipients.
+        // cc:'second@domain.com',
+        // bcc:'secretagent@company.gov',
+        subject: 'Cowspiracy bot log',
+        // 'h:Reply-To': 'reply2this@company.com',
+        //You can use "html:" to send HTML email content. It's magic!
+        // html: JSON.stringify(data),
+        //You can use "text:" to send plain-text content. It's oldschool!
+        text: JSON.stringify(data.statuses[0], null, 4)
+      }, function (err, info) {
+        if (err) {
+          console.log('Error: ' + err);
+        }
+        else {
+          console.log('Response: ' + JSON.stringify(info));
+        }
+      });
+      
+      // console.log(data);
+      // console.log('hello');
       
       console.log(currentUser);
       console.log(data.statuses[0].text);
