@@ -32,26 +32,6 @@ var auth = {
 
 var nodemailerMailgun = nodemailer.createTransport(mg(auth));
 
-// nodemailerMailgun.sendMail({
-//         from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
-//         to: 'phocks@gmail.com', // An array if you have multiple recipients.
-//         // cc:'second@domain.com',
-//         // bcc:'secretagent@company.gov',
-//         subject: 'Cowspiracy bot log',
-//         // 'h:Reply-To': 'reply2this@company.com',
-//         //You can use "html:" to send HTML email content. It's magic!
-//         // html: JSON.stringify(data),
-//         //You can use "text:" to send plain-text content. It's oldschool!
-//         text: "Hello there !!!!!"
-//       }, function (err, info) {
-//         if (err) {
-//           console.log('Error: ' + err);
-//         }
-//         else {
-//           console.log('Response: ' + JSON.stringify(info));
-//         }
-//       });
-
 
 app.use(express.static('public'));
 
@@ -74,30 +54,10 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
       
       var currentUser = data.statuses[0].user.screen_name;
       
-      nodemailerMailgun.sendMail({
-        from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
-        to: 'phocks@gmail.com', // An array if you have multiple recipients.
-        // cc:'second@domain.com',
-        // bcc:'secretagent@company.gov',
-        subject: 'Cowspiracy bot log',
-        // 'h:Reply-To': 'reply2this@company.com',
-        //You can use "html:" to send HTML email content. It's magic!
-        // html: JSON.stringify(data),
-        //You can use "text:" to send plain-text content. It's oldschool!
-        text: JSON.stringify(data.statuses[0], null, 4)
-      }, function (err, info) {
-        if (err) {
-          console.log('Error: ' + err);
-        }
-        else {
-          console.log('Response: ' + JSON.stringify(info));
-        }
-      });
       
-      // console.log(data);
-      // console.log('hello');
+      mailNotify(data);
       
-      console.log(currentUser);
+      console.log("Current user: " + currentUser);
       console.log(data.statuses[0].text);
       
       
@@ -133,3 +93,25 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
 var listener = app.listen(process.env.PORT, function () {
   console.log('Your bot is running on port ' + listener.address().port);
 });
+
+var mailNotify = (data) => {
+  nodemailerMailgun.sendMail({
+    from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
+    to: 'phocks@gmail.com', // An array if you have multiple recipients.
+    // cc:'second@domain.com',
+    // bcc:'secretagent@company.gov',
+    subject: 'Cowspiracy bot log',
+    // 'h:Reply-To': 'reply2this@company.com',
+    //You can use "html:" to send HTML email content. It's magic!
+    // html: JSON.stringify(data),
+    //You can use "text:" to send plain-text content. It's oldschool!
+    text: JSON.stringify(data, null, 4)
+  }, function (err, info) {
+    if (err) {
+      console.log('Error: ' + err);
+    }
+    else {
+      console.log('Response: ' + JSON.stringify(info));
+    }
+  });
+}
