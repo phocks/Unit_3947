@@ -15,10 +15,10 @@ var config = {
         }
       }
       
-var Bot = new Twit(config.twitter),
-      // stream = Bot.stream('statuses/sample'),
-      TWITTER_SEARCH_PHRASE = 'cowspiracy',
-      blockedUsernames = [
+var Bot = new Twit(config.twitter);
+// stream = Bot.stream('statuses/sample'),
+var TWITTER_SEARCH_PHRASE = 'cowspiracy -filter:nativeretweets';
+var blockedUsernames = [
         'SSF_BERF_DEFM', 'DefendingBeef', 'Unit_3947'
       ];
 
@@ -32,26 +32,6 @@ var auth = {
 
 var nodemailerMailgun = nodemailer.createTransport(mg(auth));
 
-// nodemailerMailgun.sendMail({
-//         from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
-//         to: 'phocks@gmail.com', // An array if you have multiple recipients.
-//         // cc:'second@domain.com',
-//         // bcc:'secretagent@company.gov',
-//         subject: 'Cowspiracy bot log',
-//         // 'h:Reply-To': 'reply2this@company.com',
-//         //You can use "html:" to send HTML email content. It's magic!
-//         // html: JSON.stringify(data),
-//         //You can use "text:" to send plain-text content. It's oldschool!
-//         text: "Hello there !!!!!"
-//       }, function (err, info) {
-//         if (err) {
-//           console.log('Error: ' + err);
-//         }
-//         else {
-//           console.log('Response: ' + JSON.stringify(info));
-//         }
-//       });
-
 
 app.use(express.static('public'));
 
@@ -62,6 +42,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
     result_type: "recent",
     lang: "en"
   }
+  
 
   Bot.get('search/tweets', query, function (error, data, response) {
     if (error) {
@@ -74,30 +55,9 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
       
       var currentUser = data.statuses[0].user.screen_name;
       
-      nodemailerMailgun.sendMail({
-        from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
-        to: 'phocks@gmail.com', // An array if you have multiple recipients.
-        // cc:'second@domain.com',
-        // bcc:'secretagent@company.gov',
-        subject: 'Cowspiracy bot log',
-        // 'h:Reply-To': 'reply2this@company.com',
-        //You can use "html:" to send HTML email content. It's magic!
-        // html: JSON.stringify(data),
-        //You can use "text:" to send plain-text content. It's oldschool!
-        text: JSON.stringify(data.statuses[0], null, 4)
-      }, function (err, info) {
-        if (err) {
-          console.log('Error: ' + err);
-        }
-        else {
-          console.log('Response: ' + JSON.stringify(info));
-        }
-      });
+      // mailNotify(data);
       
-      // console.log(data);
-      // console.log('hello');
-      
-      console.log(currentUser);
+      console.log("Current user: " + currentUser);
       console.log(data.statuses[0].text);
       
       
@@ -133,3 +93,35 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
 var listener = app.listen(process.env.PORT, function () {
   console.log('Your bot is running on port ' + listener.address().port);
 });
+
+var mailNotify = (data) => {
+  nodemailerMailgun.sendMail({
+    from: 'no-reply@sandbox71482a33e9e24b67901975719d717d59.mailgun.org',
+    to: 'phocks@gmail.com', // An array if you have multiple recipients.
+    // cc:'second@domain.com',
+    // bcc:'secretagent@company.gov',
+    subject: 'Cowspiracy bot log',
+    // 'h:Reply-To': 'reply2this@company.com',
+    //You can use "html:" to send HTML email content. It's magic!
+    // html: JSON.stringify(data),
+    //You can use "text:" to send plain-text content. It's oldschool!
+    text: JSON.stringify(data, null, 4)
+  }, function (err, info) {
+    if (err) {
+      console.log('Error: ' + err);
+    }
+    else {
+      console.log('Response: ' + JSON.stringify(info));
+    }
+  });
+}
+
+// Use in case a user blocks you and you can't unretweet or unfav
+// Bot.post('favorites/destroy', {id: '914409244400766976'}, function (error, response) {
+//   if (error) console.log(error);
+//   else console.log(response);
+// })
+// Bot.post('statuses/unretweet/914409244400766976', {id: '914409244400766976'}, function (error, response) {
+//   if (error) console.log(error);
+//   else console.log(response);
+// })
