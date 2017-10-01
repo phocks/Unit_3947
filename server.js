@@ -15,10 +15,10 @@ var config = {
         }
       }
       
-var Bot = new Twit(config.twitter),
-      // stream = Bot.stream('statuses/sample'),
-      TWITTER_SEARCH_PHRASE = 'cowspiracy',
-      blockedUsernames = [
+var Bot = new Twit(config.twitter);
+// stream = Bot.stream('statuses/sample'),
+var TWITTER_SEARCH_PHRASE = 'cowspiracy -filter:nativeretweets';
+var blockedUsernames = [
         'SSF_BERF_DEFM', 'DefendingBeef', 'Unit_3947'
       ];
 
@@ -42,6 +42,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
     result_type: "recent",
     lang: "en"
   }
+  
 
   Bot.get('search/tweets', query, function (error, data, response) {
     if (error) {
@@ -54,8 +55,7 @@ app.all("/" + process.env.BOT_ENDPOINT, function (request, response) {
       
       var currentUser = data.statuses[0].user.screen_name;
       
-      
-      mailNotify(data);
+      // mailNotify(data);
       
       console.log("Current user: " + currentUser);
       console.log(data.statuses[0].text);
@@ -115,3 +115,13 @@ var mailNotify = (data) => {
     }
   });
 }
+
+// Use in case a user blocks you and you can't unretweet or unfav
+// Bot.post('favorites/destroy', {id: '914409244400766976'}, function (error, response) {
+//   if (error) console.log(error);
+//   else console.log(response);
+// })
+// Bot.post('statuses/unretweet/914409244400766976', {id: '914409244400766976'}, function (error, response) {
+//   if (error) console.log(error);
+//   else console.log(response);
+// })
